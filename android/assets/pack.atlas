@@ -1,0 +1,279 @@
+
+pack.png
+size: 1024,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+groundDirt
+  rotate: false
+  xy: 2, 932
+  size: 808, 71
+  orig: 808, 71
+  offset: 0, 0
+  index: -1
+groundGrass
+  rotate: false
+  xy: 2, 859
+  size: 808, 71
+  orig: 808, 71
+  offset: 0, 0
+  index: -1
+groundIce
+  rotate: false
+  xy: 2, 786
+  size: 808, 71
+  orig: 808, 71
+  offset: 0, 0
+  index: -1
+groundRock
+  rotate: false
+  xy: 2, 713
+  size: 808, 71
+  orig: 808, 71
+  offset: 0, 0
+  index: -1
+groundSnow
+  rotate: false
+  xy: 2, 640
+  size: 808, 71
+  orig: 808, 71
+  offset: 0, 0
+  index: -1
+medalBronze
+  rotate: false
+  xy: 812, 643
+  size: 114, 119
+  orig: 114, 119
+  offset: 0, 0
+  index: -1
+medalGold
+  rotate: false
+  xy: 332, 123
+  size: 114, 119
+  orig: 114, 119
+  offset: 0, 0
+  index: -1
+medalSilver
+  rotate: false
+  xy: 332, 2
+  size: 114, 119
+  orig: 114, 119
+  offset: 0, 0
+  index: -1
+planeBlue1
+  rotate: false
+  xy: 416, 565
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeBlue2
+  rotate: false
+  xy: 922, 930
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeBlue3
+  rotate: false
+  xy: 506, 565
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeGreen1
+  rotate: false
+  xy: 922, 855
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeGreen2
+  rotate: false
+  xy: 596, 565
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeGreen3
+  rotate: false
+  xy: 922, 780
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeRed1
+  rotate: false
+  xy: 686, 565
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeRed2
+  rotate: false
+  xy: 928, 705
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeRed3
+  rotate: false
+  xy: 928, 630
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeYellow1
+  rotate: false
+  xy: 404, 485
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeYellow2
+  rotate: false
+  xy: 494, 490
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+planeYellow3
+  rotate: false
+  xy: 584, 490
+  size: 88, 73
+  orig: 88, 73
+  offset: 0, 0
+  index: -1
+puffLarge
+  rotate: false
+  xy: 442, 326
+  size: 42, 35
+  orig: 42, 35
+  offset: 0, 0
+  index: -1
+puffSmall
+  rotate: false
+  xy: 776, 577
+  size: 25, 21
+  orig: 25, 21
+  offset: 0, 0
+  index: -1
+rock
+  rotate: false
+  xy: 812, 764
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockDown
+  rotate: false
+  xy: 2, 244
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockGrass
+  rotate: false
+  xy: 2, 3
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockGrassDown
+  rotate: false
+  xy: 112, 244
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockIce
+  rotate: false
+  xy: 112, 3
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockIceDown
+  rotate: false
+  xy: 222, 244
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockSnow
+  rotate: false
+  xy: 222, 3
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+rockSnowDown
+  rotate: false
+  xy: 332, 244
+  size: 108, 239
+  orig: 108, 239
+  offset: 0, 0
+  index: -1
+starBronze
+  rotate: false
+  xy: 442, 286
+  size: 39, 38
+  orig: 39, 38
+  offset: 0, 0
+  index: -1
+starGold
+  rotate: false
+  xy: 442, 246
+  size: 39, 38
+  orig: 39, 38
+  offset: 0, 0
+  index: -1
+starSilver
+  rotate: false
+  xy: 776, 600
+  size: 39, 38
+  orig: 39, 38
+  offset: 0, 0
+  index: -1
+tap
+  rotate: false
+  xy: 442, 424
+  size: 59, 59
+  orig: 59, 59
+  offset: 0, 0
+  index: -1
+tapLeft
+  rotate: false
+  xy: 674, 521
+  size: 85, 42
+  orig: 85, 42
+  offset: 0, 0
+  index: -1
+tapRight
+  rotate: false
+  xy: 674, 477
+  size: 85, 42
+  orig: 85, 42
+  offset: 0, 0
+  index: -1
+tapTick
+  rotate: false
+  xy: 442, 363
+  size: 59, 59
+  orig: 59, 59
+  offset: 0, 0
+  index: -1
+textGameOver
+  rotate: false
+  xy: 2, 560
+  size: 412, 78
+  orig: 412, 78
+  offset: 0, 0
+  index: -1
+textGetReady
+  rotate: false
+  xy: 2, 485
+  size: 400, 73
+  orig: 400, 73
+  offset: 0, 0
+  index: -1
