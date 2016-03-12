@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -19,9 +20,16 @@ import com.badlogic.gdx.utils.viewport.Viewport
 
 val HEIGHT: Float = 480f;
 val WIDTH : Float = (9f/16f) * HEIGHT;
+val GRAVITY = 10f
+val GROUND_LEVEL = 10f
 
 class Plane(atlas: TextureAtlas) : Actor() {
     var texture = atlas.findRegion("planeGreen1")
+    var accel = Vector2(0f,-GRAVITY)
+    var vel = Vector2(0f, 0f)
+    var state = State.ALIVE
+
+    enum class State { ALIVE, DEAD }
 
     init {
         width = texture.regionWidth.toFloat()
@@ -31,6 +39,26 @@ class Plane(atlas: TextureAtlas) : Actor() {
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
         batch?.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+    }
+
+    override fun act(delta: Float) {
+        super.act(delta)
+        vel.add(accel.x * delta, accel.y * delta)
+        x += vel.x * delta
+        y += vel.y * delta
+
+        val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
+        val isAboveGame = getY(Align.top) > HEIGHT
+
+        if ( isBelowGround ) {
+            setPosition(getX(Align.bottom), GROUND_LEVEL, Align.bottom)
+            state = State.DEAD
+        }
+
+        if ( isAboveGame ) {
+            setPosition(getX(Align.top), HEIGHT, Align.top)
+            state = State.DEAD
+        }
     }
 }
 
@@ -53,6 +81,7 @@ class TappyPlane : ApplicationAdapter() {
         var plane = Plane(atlas)
         plane.setPosition(WIDTH/2, HEIGHT/2)
         stage.addActor(Image(Texture("background.png")))
+        stage.addActor(Image(atlas.findRegion("groundDirt")))
         stage.addActor(plane)
     }
 
