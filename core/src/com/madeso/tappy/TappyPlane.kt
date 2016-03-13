@@ -4,13 +4,12 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.Batch
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g2d.TextureAtlas
+import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
@@ -23,8 +22,35 @@ val GRAVITY = 700f
 val JUMP_VEL = 400f
 val GROUND_LEVEL = 10f
 
+class AnimationDrawable(var anim:Animation) {
+    var stateTime = 0f
+
+    var regionWidth = anim.keyFrames[0].regionWidth.toFloat()
+    var regionHeight = anim.keyFrames[0].regionHeight.toFloat()
+
+    public fun act(delta:Float) {
+        stateTime += delta;
+    }
+
+    public fun reset()
+    {
+        stateTime = 0f
+    }
+
+    fun image(): TextureRegion {
+        return anim.getKeyFrame(stateTime)
+    }
+}
+
+
 class Plane(atlas: TextureAtlas) : Actor() {
-    var texture = atlas.findRegion("planeGreen1")
+    var texture = AnimationDrawable(
+            Animation(0.05f,
+                    atlas.findRegion("planeGreen1"),
+                    atlas.findRegion("planeGreen2"),
+                    atlas.findRegion("planeGreen3")
+            )
+    )
     var accel = Vector2(0f,-GRAVITY)
     var vel = Vector2(0f, 0f)
     var state = State.ALIVE
@@ -32,17 +58,19 @@ class Plane(atlas: TextureAtlas) : Actor() {
     enum class State { ALIVE, DEAD }
 
     init {
-        width = texture.regionWidth.toFloat()
-        height = texture.regionHeight.toFloat()
+        width = texture.regionWidth
+        height = texture.regionHeight
         setOrigin(Align.center)
+        texture.anim.playMode = Animation.PlayMode.LOOP
     }
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
-        batch?.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+        batch?.draw(texture.image(), x, y, originX, originY, width, height, scaleX, scaleY, rotation)
     }
 
     override fun act(delta: Float) {
         super.act(delta)
+        texture.act(delta)
         vel.add(accel.x * delta, accel.y * delta)
         x += vel.x * delta
         y += vel.y * delta
