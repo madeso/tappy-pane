@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.*
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -70,10 +71,22 @@ class Plane(atlas: TextureAtlas) : Actor() {
 
     override fun act(delta: Float) {
         super.act(delta)
+        when(state) {
+            State.ALIVE -> actAlive(delta)
+            State.DEAD -> {
+                vel = Vector2.Zero
+                accel = Vector2.Zero
+            }
+        }
+    }
+
+    private fun actAlive(delta: Float) {
         texture.act(delta)
         vel.add(accel.x * delta, accel.y * delta)
         x += vel.x * delta
         y += vel.y * delta
+
+        rotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
 
         val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
         val isAboveGame = getY(Align.top) > HEIGHT
