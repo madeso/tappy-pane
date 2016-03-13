@@ -1,7 +1,6 @@
 package com.madeso.tappy
 
-import com.badlogic.gdx.ApplicationAdapter
-import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.*
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
@@ -62,33 +61,26 @@ class Plane(atlas: TextureAtlas) : Actor() {
     }
 }
 
-class TappyPlane : ApplicationAdapter() {
-    internal lateinit var batch: SpriteBatch
-    internal lateinit var camera : OrthographicCamera
-    internal lateinit var viewport : Viewport;
+class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter() {
+    internal var camera = OrthographicCamera()
+    internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
+    internal var stage = Stage(viewport, batch)
 
-    internal lateinit var atlas : TextureAtlas
-    internal lateinit var stage : Stage
-
-    override fun create() {
-        batch = SpriteBatch()
-        camera = OrthographicCamera();
-        viewport = StretchViewport(WIDTH, HEIGHT, camera);
-        stage = Stage(viewport, batch)
-        atlas = TextureAtlas("pack.atlas")
-
+    init {
         //camera.translate(WIDTH/2,HEIGHT/2)
         var plane = Plane(atlas)
         plane.setPosition(WIDTH/2, HEIGHT/2)
+
         stage.addActor(Image(Texture("background.png")))
         stage.addActor(Image(atlas.findRegion("groundDirt")))
         stage.addActor(plane)
     }
 
-    override fun render() {
+    override fun render(delta: Float) {
         batch.projectionMatrix = camera.combined;
-        stage.act()
+        stage.act(delta)
         camera.update();
+
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         stage.draw()
@@ -96,5 +88,16 @@ class TappyPlane : ApplicationAdapter() {
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height)
+    }
+}
+
+class TappyPlane : Game() {
+    internal lateinit var batch: SpriteBatch
+    internal lateinit var atlas : TextureAtlas
+
+    override fun create() {
+        batch = SpriteBatch()
+        atlas = TextureAtlas("pack.atlas")
+        setScreen(GameScreen(batch, atlas))
     }
 }
