@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.Group
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable
@@ -62,7 +63,7 @@ class Plane(atlas: TextureAtlas) : Actor() {
         width = texture.regionWidth
         height = texture.regionHeight
         setOrigin(Align.center)
-        texture.anim.playMode = Animation.PlayMode.LOOP
+        texture.anim.playMode = Animation.PlayMode.LOOP_PINGPONG
     }
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
@@ -108,6 +109,41 @@ class Plane(atlas: TextureAtlas) : Actor() {
     }
 }
 
+class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
+    var texture = atlas.findRegion("rock" + (if(down) "Down" else ""))
+
+    init {
+        width = texture.regionWidth.toFloat()
+        height = texture.regionHeight.toFloat()
+        setOrigin(Align.topLeft)
+    }
+
+    override fun draw(batch: Batch?, parentAlpha: Float) {
+        batch?.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+    }
+}
+
+fun GetRandomOpening() = MathUtils.random(HEIGHT * .15f, HEIGHT * .85f)
+
+class RockPair(atlas:TextureAtlas) : Group() {
+    var top = Rock(atlas, true)
+    var bottom = Rock(atlas, false)
+
+    init {
+        addActor(top)
+        addActor(bottom)
+
+        setup()
+    }
+
+    private fun setup() {
+        val gapSize = 130f
+        val y = GetRandomOpening()
+        bottom.setPosition(0f, y-gapSize/2f, Align.topLeft)
+        top.setPosition(0f, y + gapSize/2f, Align.bottomLeft)
+    }
+}
+
 class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter() {
     internal var camera = OrthographicCamera()
     internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
@@ -116,11 +152,14 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
 
     init {
         //camera.translate(WIDTH/2,HEIGHT/2)
-        plane.setPosition(WIDTH/2, HEIGHT/2)
+        plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
 
         stage.addActor(Image(Texture("background.png")))
         stage.addActor(Image(atlas.findRegion("groundDirt")))
         stage.addActor(plane)
+        var rock = RockPair(atlas)
+        rock.setPosition(WIDTH/2, 0f)
+        stage.addActor(rock)
 
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
