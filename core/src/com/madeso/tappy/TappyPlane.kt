@@ -19,7 +19,8 @@ import com.badlogic.gdx.utils.viewport.Viewport
 
 val HEIGHT: Float = 480f;
 val WIDTH : Float = (9f/16f) * HEIGHT;
-val GRAVITY = 10f
+val GRAVITY = 700f
+val JUMP_VEL = 400f
 val GROUND_LEVEL = 10f
 
 class Plane(atlas: TextureAtlas) : Actor() {
@@ -59,21 +60,32 @@ class Plane(atlas: TextureAtlas) : Actor() {
             state = State.DEAD
         }
     }
+
+    fun jump() {
+        vel.y = JUMP_VEL;
+    }
 }
 
 class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter() {
     internal var camera = OrthographicCamera()
     internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
     internal var stage = Stage(viewport, batch)
+    internal var plane = Plane(atlas)
 
     init {
         //camera.translate(WIDTH/2,HEIGHT/2)
-        var plane = Plane(atlas)
         plane.setPosition(WIDTH/2, HEIGHT/2)
 
         stage.addActor(Image(Texture("background.png")))
         stage.addActor(Image(atlas.findRegion("groundDirt")))
         stage.addActor(plane)
+
+        Gdx.input.inputProcessor = object : InputAdapter() {
+            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                plane.jump()
+                return true
+            }
+        }
     }
 
     override fun render(delta: Float) {
