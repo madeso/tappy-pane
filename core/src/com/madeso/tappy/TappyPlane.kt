@@ -23,6 +23,10 @@ val WIDTH : Float = (9f/16f) * HEIGHT;
 val GRAVITY = 700f
 val JUMP_VEL = 400f
 val GROUND_LEVEL = 10f
+val SPEED = 50f
+val STARTING_GAP = WIDTH*1
+val TOTAL_ROCKS = 3
+val ROCK_GAP = WIDTH * 1.25f
 
 class AnimationDrawable(var anim:Animation) {
     var stateTime = 0f
@@ -136,11 +140,20 @@ class RockPair(atlas:TextureAtlas) : Group() {
         setup()
     }
 
+    override fun act(delta: Float) {
+        x -= SPEED * delta
+        if( x < 0f) {
+            x += ROCK_GAP * TOTAL_ROCKS
+            setup()
+        }
+        super.act(delta)
+    }
+
     private fun setup() {
-        val gapSize = 130f
+        val gapSize = 200f
         val y = GetRandomOpening()
-        bottom.setPosition(0f, y-gapSize/2f, Align.topLeft)
-        top.setPosition(0f, y + gapSize/2f, Align.bottomLeft)
+        bottom.setPosition(0f, y-gapSize/2f, Align.topRight)
+        top.setPosition(0f, y + gapSize/2f, Align.bottomRight)
     }
 }
 
@@ -157,9 +170,11 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
         stage.addActor(Image(Texture("background.png")))
         stage.addActor(Image(atlas.findRegion("groundDirt")))
         stage.addActor(plane)
-        var rock = RockPair(atlas)
-        rock.setPosition(WIDTH/2, 0f)
-        stage.addActor(rock)
+        for(x in 1..TOTAL_ROCKS) {
+            var rock = RockPair(atlas)
+            rock.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
+            stage.addActor(rock)
+        }
 
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
