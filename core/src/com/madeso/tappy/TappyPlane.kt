@@ -86,7 +86,8 @@ class Plane(atlas: TextureAtlas) : Actor() {
         x += vel.x * delta
         y += vel.y * delta
 
-        rotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
+        val newrotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
+        rotation = MathUtils.lerp(rotation, newrotation, 0.1f)
 
         val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
         val isAboveGame = getY(Align.top) > HEIGHT
