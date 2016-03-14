@@ -119,7 +119,10 @@ class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
 
     init {
         width = texture.regionWidth.toFloat()
-        height = texture.regionHeight.toFloat()
+        // height = texture.regionHeight.toFloat()
+        // the height needs to be a little larger than the
+        // actual pixels to accommodate for game logic
+        height = 239f + 30f
         setOrigin(Align.topLeft)
     }
 
@@ -128,7 +131,13 @@ class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
     }
 }
 
-fun GetRandomOpening() = MathUtils.random(HEIGHT * .15f, HEIGHT * .85f)
+val HALF_GAP_SIZE = 100f
+// the minimum amount of pixels to display when drawing a rock
+val EXTRA_ROCK_PIXELS = 15f
+val MIN_DISTANCE = HALF_GAP_SIZE + EXTRA_ROCK_PIXELS
+
+// fun GetRandomOpening() = MIN_DISTANCE+EXTRA_ROCK_PIXELS
+fun GetRandomOpening() = MathUtils.random(MIN_DISTANCE, HEIGHT - MIN_DISTANCE)
 
 class RockPair(atlas:TextureAtlas) : Group() {
     var top = Rock(atlas, true)
@@ -151,15 +160,15 @@ class RockPair(atlas:TextureAtlas) : Group() {
     }
 
     private fun setupSpacing() {
-        val gapSize = 200f
+        val gapSize = HALF_GAP_SIZE
         val y = GetRandomOpening()
-        bottom.setPosition(0f, y-gapSize/2f, Align.topRight)
-        top.setPosition(0f, y + gapSize/2f, Align.bottomRight)
+        bottom.setPosition(0f, y-gapSize, Align.topRight)
+        top.setPosition(0f, y + gapSize, Align.bottomRight)
     }
 }
 
-class TilingImage(count:Int, val speed:Float, img:()->Image) : Group() {
-    var images = Array<Image>(count, {i -> img() })
+class TilingImage(count:Int, val speed:Float, createImage:()->Image) : Group() {
+    var images = Array<Image>(count, {i -> createImage() })
     val totalwidth : Float
 
     init {
@@ -193,7 +202,7 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
         plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
 
         stage.addActor(
-                TilingImage(2, -SPEED/2) {
+                TilingImage(2, -SPEED/4) {
                     Image(Texture("background.png"))
                 }
         )
