@@ -29,7 +29,7 @@ val TOTAL_ROCKS = 3
 val ROCK_GAP = WIDTH * 1.25f
 val HALF_GAP_SIZE = 100f
 // the minimum amount of pixels to display when drawing a rock
-val EXTRA_ROCK_PIXELS = 15f
+val EXTRA_ROCK_PIXELS = 25f
 val MIN_DISTANCE = HALF_GAP_SIZE + EXTRA_ROCK_PIXELS
 
 class AnimationDrawable(var anim:Animation) {
@@ -204,12 +204,12 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
                     Image(Texture("background.png"))
                 }
         )
+
         stage.addActor(
-                TilingImage(2, -SPEED) {
+                TilingImage(2, -SPEED/2f) {
                     Image(atlas.findRegion("groundDirt"))
                 }
         )
-
         stage.addActor(plane)
         for(x in 1..TOTAL_ROCKS) {
             var rocks = RockPair(atlas)
