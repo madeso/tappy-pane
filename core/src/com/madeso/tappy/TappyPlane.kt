@@ -1,6 +1,9 @@
 package com.madeso.tappy
 
-import com.badlogic.gdx.*
+import com.badlogic.gdx.Game
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
@@ -11,13 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Group
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
-import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
-import com.badlogic.gdx.utils.viewport.ExtendViewport
-import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.StretchViewport
-import com.badlogic.gdx.utils.viewport.Viewport
 
 val HEIGHT: Float = 480f;
 val WIDTH : Float = (9f/16f) * HEIGHT;
@@ -28,6 +27,10 @@ val SPEED = 120f
 val STARTING_GAP = WIDTH*1
 val TOTAL_ROCKS = 3
 val ROCK_GAP = WIDTH * 1.25f
+val HALF_GAP_SIZE = 100f
+// the minimum amount of pixels to display when drawing a rock
+val EXTRA_ROCK_PIXELS = 15f
+val MIN_DISTANCE = HALF_GAP_SIZE + EXTRA_ROCK_PIXELS
 
 class AnimationDrawable(var anim:Animation) {
     var stateTime = 0f
@@ -130,11 +133,6 @@ class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
         batch?.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
     }
 }
-
-val HALF_GAP_SIZE = 100f
-// the minimum amount of pixels to display when drawing a rock
-val EXTRA_ROCK_PIXELS = 15f
-val MIN_DISTANCE = HALF_GAP_SIZE + EXTRA_ROCK_PIXELS
 
 // fun GetRandomOpening() = MIN_DISTANCE+EXTRA_ROCK_PIXELS
 fun GetRandomOpening() = MathUtils.random(MIN_DISTANCE, HEIGHT - MIN_DISTANCE)
