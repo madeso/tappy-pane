@@ -52,8 +52,9 @@ class AnimationDrawable(var anim:Animation) {
     }
 }
 
+enum class State { ALIVE, DEAD }
 
-class Plane(atlas: TextureAtlas) : Actor() {
+class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
     var texture = AnimationDrawable(
             Animation(0.05f,
                     atlas.findRegion("planeGreen1"),
@@ -63,9 +64,6 @@ class Plane(atlas: TextureAtlas) : Actor() {
     )
     var accel = Vector2(0f,-GRAVITY)
     var vel = Vector2(0f, 0f)
-    var state = State.ALIVE
-
-    enum class State { ALIVE, DEAD }
 
     init {
         width = texture.regionWidth
@@ -80,7 +78,7 @@ class Plane(atlas: TextureAtlas) : Actor() {
 
     override fun act(delta: Float) {
         super.act(delta)
-        when(state) {
+        when(game.state) {
             State.ALIVE -> actAlive(delta)
             State.DEAD -> {
                 vel = Vector2.Zero
@@ -103,12 +101,12 @@ class Plane(atlas: TextureAtlas) : Actor() {
 
         if ( isBelowGround ) {
             setPosition(getX(Align.bottom), GROUND_LEVEL, Align.bottom)
-            state = State.DEAD
+            game.state = State.DEAD
         }
 
         if ( isAboveGame ) {
             setPosition(getX(Align.top), HEIGHT, Align.top)
-            state = State.DEAD
+            game.state = State.DEAD
         }
     }
 
@@ -137,7 +135,7 @@ class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
 // fun GetRandomOpening() = MIN_DISTANCE+EXTRA_ROCK_PIXELS
 fun GetRandomOpening() = MathUtils.random(MIN_DISTANCE, HEIGHT - MIN_DISTANCE)
 
-class RockPair(atlas:TextureAtlas) : Group() {
+class RockPair(val game:GameScreen, atlas:TextureAtlas) : Group() {
     var top = Rock(atlas, true)
     var bottom = Rock(atlas, false)
 
@@ -149,10 +147,12 @@ class RockPair(atlas:TextureAtlas) : Group() {
     }
 
     override fun act(delta: Float) {
-        x -= SPEED * delta
-        if( x < 0f) {
-            x += ROCK_GAP * TOTAL_ROCKS
-            setupSpacing()
+        if( game.state == State.ALIVE) {
+            x -= SPEED * delta
+            if ( x < 0f) {
+                x += ROCK_GAP * TOTAL_ROCKS
+                setupSpacing()
+            }
         }
         super.act(delta)
     }
@@ -165,7 +165,7 @@ class RockPair(atlas:TextureAtlas) : Group() {
     }
 }
 
-class TilingImage(count:Int, val speed:Float, createImage:()->Image) : Group() {
+class TilingImage(val game:GameScreen, count:Int, val speed:Float, createImage:()->Image) : Group() {
     var images = Array<Image>(count, {i -> createImage() })
     val totalwidth : Float
 
@@ -183,9 +183,11 @@ class TilingImage(count:Int, val speed:Float, createImage:()->Image) : Group() {
     }
 
     override fun act(delta: Float) {
-        for(img in images) {
-            img.x += delta * speed
-            if (img.x <= -img.width) img.x += totalwidth
+        if( game.state == State.ALIVE ) {
+            for (img in images) {
+                img.x += delta * speed
+                if (img.x <= -img.width) img.x += totalwidth
+            }
         }
     }
 }
@@ -194,25 +196,26 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     internal var camera = OrthographicCamera()
     internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
     internal var stage = Stage(viewport, batch)
-    internal var plane = Plane(atlas)
+    internal var plane = Plane(this, atlas)
+    var state = State.ALIVE
 
     init {
         plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
 
         stage.addActor(
-                TilingImage(2, -SPEED/4) {
+                TilingImage(this, 2, -SPEED/4) {
                     Image(Texture("background.png"))
                 }
         )
 
         stage.addActor(
-                TilingImage(2, -SPEED/2f) {
+                TilingImage(this, 2, -SPEED/2f) {
                     Image(atlas.findRegion("groundDirt"))
                 }
         )
         stage.addActor(plane)
         for(x in 1..TOTAL_ROCKS) {
-            var rocks = RockPair(atlas)
+            var rocks = RockPair(this, atlas)
             rocks.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
             stage.addActor(rocks)
         }
