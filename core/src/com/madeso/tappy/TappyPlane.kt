@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable
 import com.badlogic.gdx.utils.Align
+import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.StretchViewport
@@ -21,9 +22,9 @@ import com.badlogic.gdx.utils.viewport.Viewport
 val HEIGHT: Float = 480f;
 val WIDTH : Float = (9f/16f) * HEIGHT;
 val GRAVITY = 700f
-val JUMP_VEL = 400f
+val JUMP_VEL = 350f
 val GROUND_LEVEL = 10f
-val SPEED = 50f
+val SPEED = 120f
 val STARTING_GAP = WIDTH*1
 val TOTAL_ROCKS = 3
 val ROCK_GAP = WIDTH * 1.25f
@@ -137,23 +138,48 @@ class RockPair(atlas:TextureAtlas) : Group() {
         addActor(top)
         addActor(bottom)
 
-        setup()
+        setupSpacing()
     }
 
     override fun act(delta: Float) {
         x -= SPEED * delta
         if( x < 0f) {
             x += ROCK_GAP * TOTAL_ROCKS
-            setup()
+            setupSpacing()
         }
         super.act(delta)
     }
 
-    private fun setup() {
+    private fun setupSpacing() {
         val gapSize = 200f
         val y = GetRandomOpening()
         bottom.setPosition(0f, y-gapSize/2f, Align.topRight)
         top.setPosition(0f, y + gapSize/2f, Align.bottomRight)
+    }
+}
+
+class TilingImage(count:Int, val speed:Float, img:()->Image) : Group() {
+    var images = Array<Image>(count, {i -> img() })
+    val totalwidth : Float
+
+    init {
+        var d = 0f
+        for(img in images) {
+            img.setAlign(Align.bottomLeft)
+            img.setScaling(Scaling.stretch)
+            img.x = d
+            img.y = 0f
+            d += img.width
+            addActor(img)
+        }
+        totalwidth = d
+    }
+
+    override fun act(delta: Float) {
+        for(img in images) {
+            img.x += delta * speed
+            if (img.x <= -img.width) img.x += totalwidth
+        }
     }
 }
 
@@ -164,16 +190,24 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     internal var plane = Plane(atlas)
 
     init {
-        //camera.translate(WIDTH/2,HEIGHT/2)
         plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
 
-        stage.addActor(Image(Texture("background.png")))
-        stage.addActor(Image(atlas.findRegion("groundDirt")))
+        stage.addActor(
+                TilingImage(2, -SPEED/2) {
+                    Image(Texture("background.png"))
+                }
+        )
+        stage.addActor(
+                TilingImage(2, -SPEED) {
+                    Image(atlas.findRegion("groundDirt"))
+                }
+        )
+
         stage.addActor(plane)
         for(x in 1..TOTAL_ROCKS) {
-            var rock = RockPair(atlas)
-            rock.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
-            stage.addActor(rock)
+            var rocks = RockPair(atlas)
+            rocks.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
+            stage.addActor(rocks)
         }
 
         Gdx.input.inputProcessor = object : InputAdapter() {
