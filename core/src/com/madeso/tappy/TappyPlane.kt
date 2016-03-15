@@ -54,7 +54,7 @@ class AnimationDrawable(var anim:Animation) {
     }
 }
 
-enum class State { ALIVE, DEAD }
+enum class State { ALIVE, DYING, DEAD }
 
 class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
     var texture = AnimationDrawable(
@@ -89,6 +89,7 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
         super.act(delta)
         when(game.state) {
             State.ALIVE -> actAlive(delta)
+            State.DYING -> actDying(delta)
             State.DEAD -> {
                 vel = Vector2.Zero
                 accel = Vector2.Zero
@@ -96,34 +97,53 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
         }
     }
 
+    private fun actDying(delta: Float) {
+        applyGravity(delta)
+        applyRotation()
+        belowGroundCheck()
+    }
+
     private fun actAlive(delta: Float) {
         texture.act(delta)
+        applyGravity(delta)
+
+        applyRotation()
+
+        belowGroundCheck()
+
+        val isAboveGame = getY(Align.top) > HEIGHT
+        if ( isAboveGame ) {
+            setPosition(getX(Align.top), HEIGHT, Align.top)
+            game.state = State.DYING
+        }
+    }
+
+    private fun applyRotation() {
+        val newrotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
+        rotation = MathUtils.lerp(rotation, newrotation, 0.1f)
+    }
+
+    private fun belowGroundCheck() {
+        val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
+        if ( isBelowGround ) {
+            setPosition(getX(Align.bottom), GROUND_LEVEL, Align.bottom)
+            game.state = State.DEAD
+        }
+    }
+
+    private fun applyGravity(delta: Float) {
         vel.add(accel.x * delta, accel.y * delta)
         x += vel.x * delta
         y += vel.y * delta
 
         hitbox.x = x
         hitbox.y = y
-
-        val newrotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
-        rotation = MathUtils.lerp(rotation, newrotation, 0.1f)
-
-        val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
-        val isAboveGame = getY(Align.top) > HEIGHT
-
-        if ( isBelowGround ) {
-            setPosition(getX(Align.bottom), GROUND_LEVEL, Align.bottom)
-            game.state = State.DEAD
-        }
-
-        if ( isAboveGame ) {
-            setPosition(getX(Align.top), HEIGHT, Align.top)
-            game.state = State.DEAD
-        }
     }
 
     fun jump() {
-        vel.y = JUMP_VEL;
+        if( game.state == State.ALIVE ) {
+            vel.y = JUMP_VEL;
+        }
     }
 }
 
@@ -262,7 +282,7 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
         if( state == State.ALIVE ) {
             for (rock in rocks) {
                 if ( rock.overlaps(plane.hitbox)) {
-                    state = State.DEAD
+                    state = State.DYING
                 }
             }
         }
