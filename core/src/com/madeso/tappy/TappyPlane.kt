@@ -8,7 +8,9 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.*
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Group
@@ -64,6 +66,7 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
     )
     var accel = Vector2(0f,-GRAVITY)
     var vel = Vector2(0f, 0f)
+    var hitbox = Rectangle(0f, 0f, texture.regionWidth, texture.regionHeight)
 
     init {
         width = texture.regionWidth
@@ -74,6 +77,12 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
         batch?.draw(texture.image(), x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+    }
+
+    override fun drawDebug(shapes: ShapeRenderer?) {
+        super.drawDebug(shapes)
+        shapes?.rect(x, y, texture.regionWidth, texture.regionHeight)
+        shapes?.line(0f,0f, x, y)
     }
 
     override fun act(delta: Float) {
@@ -92,6 +101,9 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
         vel.add(accel.x * delta, accel.y * delta)
         x += vel.x * delta
         y += vel.y * delta
+
+        hitbox.x = x
+        hitbox.y = y
 
         val newrotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
         rotation = MathUtils.lerp(rotation, newrotation, 0.1f)
@@ -117,6 +129,7 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
 
 class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
     var texture = atlas.findRegion("rock" + (if(down) "Down" else ""))
+    var hitbox = Rectangle(0f, 0f, texture.regionWidth.toFloat(), texture.regionHeight.toFloat())
 
     init {
         width = texture.regionWidth.toFloat()
@@ -129,6 +142,11 @@ class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
         batch?.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+    }
+
+    fun updateHitbox(ax: Float) {
+        hitbox.x = ax
+        hitbox.y = y
     }
 }
 
@@ -153,14 +171,20 @@ class RockPair(val game:GameScreen, atlas:TextureAtlas) : Group() {
                 x += ROCK_GAP * TOTAL_ROCKS
                 setupSpacing()
             }
+
+            top.updateHitbox(x)
+            bottom.updateHitbox(x)
         }
         super.act(delta)
     }
+
+    fun overlaps(o:Rectangle) = top.hitbox.overlaps(o) || bottom.hitbox.overlaps(o)
 
     private fun setupSpacing() {
         val gapSize = HALF_GAP_SIZE
         val y = GetRandomOpening()
         bottom.setPosition(0f, y-gapSize, Align.topRight)
+
         top.setPosition(0f, y + gapSize, Align.bottomRight)
     }
 }
@@ -198,6 +222,12 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     internal var stage = Stage(viewport, batch)
     internal var plane = Plane(this, atlas)
     var state = State.ALIVE
+    var rocks = Array<RockPair>(TOTAL_ROCKS) {
+        x ->
+            var rocks = RockPair(this, atlas)
+            rocks.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
+            rocks
+    }
 
     init {
         plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
@@ -214,10 +244,8 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
                 }
         )
         stage.addActor(plane)
-        for(x in 1..TOTAL_ROCKS) {
-            var rocks = RockPair(this, atlas)
-            rocks.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
-            stage.addActor(rocks)
+        for(rock in rocks) {
+            stage.addActor(rock)
         }
 
         Gdx.input.inputProcessor = object : InputAdapter() {
@@ -231,6 +259,13 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     override fun render(delta: Float) {
         batch.projectionMatrix = camera.combined;
         stage.act(delta)
+        if( state == State.ALIVE ) {
+            for (rock in rocks) {
+                if ( rock.overlaps(plane.hitbox)) {
+                    state = State.DEAD
+                }
+            }
+        }
         camera.update();
 
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
