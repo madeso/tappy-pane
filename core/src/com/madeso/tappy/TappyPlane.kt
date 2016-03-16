@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.ScreenAdapter
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
@@ -17,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.Group
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.StretchViewport
@@ -242,6 +244,14 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     internal var camera = OrthographicCamera()
     internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
     internal var stage = Stage(viewport, batch)
+
+    internal var font = BitmapFont(Gdx.files.internal("future_thin.fnt"), false)
+    internal var uicamera = OrthographicCamera()
+    internal var uiviewport = StretchViewport(WIDTH, HEIGHT, uicamera);
+    internal var uistage = Stage(uiviewport, batch)
+
+    internal var score = Label("0", Label.LabelStyle(font, Color.WHITE))
+
     internal var plane = Plane(this, atlas)
     var state = State.ALIVE
     var rocks = Array<RockPair>(TOTAL_ROCKS) {
@@ -276,11 +286,16 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
                 return true
             }
         }
+
+        score.setPosition(WIDTH/2f, HEIGHT * .9f, Align.center)
+        uistage.addActor(score)
     }
 
     override fun render(delta: Float) {
         batch.projectionMatrix = camera.combined;
+
         stage.act(delta)
+        uistage.act(delta)
         if( state == State.ALIVE ) {
             for (rock in rocks) {
                 if ( rock.overlaps(plane.hitbox)) {
@@ -289,10 +304,14 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
             }
         }
         camera.update();
+        uicamera.update()
 
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         stage.draw()
+
+        batch.projectionMatrix = uicamera.combined;
+        uistage.draw()
     }
 
     override fun resize(width: Int, height: Int) {
