@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Group
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
@@ -73,6 +74,7 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
         height = texture.regionHeight
         setOrigin(Align.center)
         texture.anim.playMode = Animation.PlayMode.LOOP_PINGPONG
+        addAction(rotateDownAction())
     }
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
@@ -99,15 +101,12 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
 
     private fun actDying(delta: Float) {
         applyGravity(delta)
-        applyRotation()
         belowGroundCheck()
     }
 
     private fun actAlive(delta: Float) {
         texture.act(delta)
         applyGravity(delta)
-
-        applyRotation()
 
         belowGroundCheck()
 
@@ -118,16 +117,12 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
         }
     }
 
-    private fun applyRotation() {
-        val newrotation = MathUtils.clamp(vel.y / JUMP_VEL, -1f, 1f) * 45f
-        rotation = MathUtils.lerp(rotation, newrotation, 0.1f)
-    }
-
     private fun belowGroundCheck() {
         val isBelowGround = getY(Align.bottom) <= GROUND_LEVEL
         if ( isBelowGround ) {
             setPosition(getX(Align.bottom), GROUND_LEVEL, Align.bottom)
             game.state = State.DEAD
+            clearActions()
         }
     }
 
@@ -143,8 +138,15 @@ class Plane(val game:GameScreen, atlas: TextureAtlas) : Actor() {
     fun jump() {
         if( game.state == State.ALIVE ) {
             vel.y = JUMP_VEL;
+
+            clearActions()
+            addAction(Actions.sequence(Actions.rotateTo(35f, .15f),
+                    Actions.delay(.5f),
+                    rotateDownAction()))
         }
     }
+
+    private fun rotateDownAction() = Actions.rotateTo(-80f, .3f)
 }
 
 class Rock(atlas: TextureAtlas, down: Boolean) : Actor() {
