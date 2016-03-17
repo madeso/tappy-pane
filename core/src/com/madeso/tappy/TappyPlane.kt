@@ -180,6 +180,8 @@ fun GetRandomOpening() = MathUtils.random(MIN_DISTANCE, HEIGHT - MIN_DISTANCE)
 class RockPair(val game:GameScreen, atlas:TextureAtlas) : Group() {
     var top = Rock(atlas, true)
     var bottom = Rock(atlas, false)
+    var player = 0f
+    var hasPassed = false
 
     init {
         addActor(top)
@@ -193,7 +195,13 @@ class RockPair(val game:GameScreen, atlas:TextureAtlas) : Group() {
             x -= SPEED * delta
             if ( x < 0f) {
                 x += ROCK_GAP * TOTAL_ROCKS
+                hasPassed = false
                 setupSpacing()
+            }
+
+            if( hasPassed == false && getX(Align.center) < player) {
+                hasPassed = true
+                game.addScore()
             }
 
             top.updateHitbox(x)
@@ -240,23 +248,29 @@ class TilingImage(val game:GameScreen, count:Int, val speed:Float, createImage:(
     }
 }
 
-class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter() {
+class Assets {
+    var font = BitmapFont(Gdx.files.internal("future_thin.fnt"), false)
+    var background = Texture("background.png")
+    var atlas = TextureAtlas("pack.atlas")
+}
+
+class GameScreen(assets:Assets, var batch : SpriteBatch) : ScreenAdapter() {
     internal var camera = OrthographicCamera()
     internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
     internal var stage = Stage(viewport, batch)
 
-    internal var font = BitmapFont(Gdx.files.internal("future_thin.fnt"), false)
     internal var uicamera = OrthographicCamera()
     internal var uiviewport = StretchViewport(WIDTH, HEIGHT, uicamera);
     internal var uistage = Stage(uiviewport, batch)
 
-    internal var score = Label("0", Label.LabelStyle(font, Color.WHITE))
+    internal var scoreLabel = Label("0", Label.LabelStyle(assets.font, Color.WHITE))
+    internal var score = 0
 
-    internal var plane = Plane(this, atlas)
+    internal var plane = Plane(this, assets.atlas)
     var state = State.ALIVE
     var rocks = Array<RockPair>(TOTAL_ROCKS) {
         x ->
-            var rocks = RockPair(this, atlas)
+            var rocks = RockPair(this, assets.atlas)
             rocks.setPosition(STARTING_GAP + x*ROCK_GAP, 0f)
             rocks
     }
@@ -266,18 +280,19 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
 
         stage.addActor(
                 TilingImage(this, 2, -SPEED/4) {
-                    Image(Texture("background.png"))
+                    Image(assets.background)
                 }
         )
 
         stage.addActor(
                 TilingImage(this, 2, -SPEED/2f) {
-                    Image(atlas.findRegion("groundDirt"))
+                    Image(assets.atlas.findRegion("groundDirt"))
                 }
         )
         stage.addActor(plane)
         for(rock in rocks) {
             stage.addActor(rock)
+            rock.player = plane.getX(Align.center)
         }
 
         Gdx.input.inputProcessor = object : InputAdapter() {
@@ -287,8 +302,8 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
             }
         }
 
-        score.setPosition(WIDTH/2f, HEIGHT * .9f, Align.center)
-        uistage.addActor(score)
+        scoreLabel.setPosition(WIDTH/2f, HEIGHT * .9f, Align.center)
+        uistage.addActor(scoreLabel)
     }
 
     override fun render(delta: Float) {
@@ -317,15 +332,20 @@ class GameScreen(var batch : SpriteBatch, atlas: TextureAtlas) : ScreenAdapter()
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height)
     }
+
+    fun addScore() {
+        score += 1
+        scoreLabel.setText(score.toString())
+    }
 }
 
 class TappyPlane : Game() {
     internal lateinit var batch: SpriteBatch
-    internal lateinit var atlas : TextureAtlas
+    internal lateinit var assets : Assets
 
     override fun create() {
+        assets = Assets()
         batch = SpriteBatch()
-        atlas = TextureAtlas("pack.atlas")
-        setScreen(GameScreen(batch, atlas))
+        setScreen(GameScreen(assets, batch))
     }
 }
