@@ -221,7 +221,7 @@ class RockPair(val game:GameScreen, atlas:TextureAtlas) : Group() {
     }
 }
 
-class TilingImage(val game:GameScreen, count:Int, val speed:Float, createImage:()->Image) : Group() {
+class TilingImage(val animate:()->Boolean, count:Int, val speed:Float, createImage:()->Image) : Group() {
     var images = Array<Image>(count, {i -> createImage() })
     val totalwidth : Float
 
@@ -239,7 +239,7 @@ class TilingImage(val game:GameScreen, count:Int, val speed:Float, createImage:(
     }
 
     override fun act(delta: Float) {
-        if( game.state == State.ALIVE ) {
+        if( animate() ) {
             for (img in images) {
                 img.x += delta * speed
                 if (img.x <= -img.width) img.x += totalwidth
@@ -254,15 +254,59 @@ class Assets {
     var atlas = TextureAtlas("pack.atlas")
 }
 
+class BasicScreen(var batch : SpriteBatch) {
+    var camera = OrthographicCamera()
+    var viewport = StretchViewport(WIDTH, HEIGHT, camera);
+    var stage = Stage(viewport, batch)
+
+    var uicamera = OrthographicCamera()
+    var uiviewport = StretchViewport(WIDTH, HEIGHT, uicamera);
+    var uistage = Stage(uiviewport, batch)
+
+    fun act(delta: Float) {
+        stage.act(delta)
+        uistage.act(delta)
+    }
+
+    fun render() {
+        camera.update();
+        batch.projectionMatrix = camera.combined;
+        stage.draw()
+    }
+
+    fun uirender() {
+        uicamera.update()
+        batch.projectionMatrix = uicamera.combined;
+        uistage.draw()
+    }
+
+    fun resize(width: Int, height: Int) {
+        viewport.update(width, height)
+        uiviewport.update(width, height)
+    }
+
+    fun addBackground(assets: Assets, animate: () -> Boolean) {
+        d.stage.addActor(
+                TilingImage(animate, 2, -SPEED/4) {
+                    Image(assets.background)
+                }
+        )
+
+        d.stage.addActor(
+                TilingImage(animate, 2, -SPEED/2f) {
+                    Image(assets.atlas.findRegion("groundDirt"))
+                }
+        )
+    }
+}
+
+fun ClearScreen() {
+    Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+}
+
 class GameScreen(assets:Assets, var batch : SpriteBatch) : ScreenAdapter() {
-    internal var camera = OrthographicCamera()
-    internal var viewport = StretchViewport(WIDTH, HEIGHT, camera);
-    internal var stage = Stage(viewport, batch)
-
-    internal var uicamera = OrthographicCamera()
-    internal var uiviewport = StretchViewport(WIDTH, HEIGHT, uicamera);
-    internal var uistage = Stage(uiviewport, batch)
-
+    internal var d = BasicScreen(batch)
     internal var scoreLabel = Label("0", Label.LabelStyle(assets.font, Color.WHITE))
     internal var score = 0
 
@@ -278,20 +322,13 @@ class GameScreen(assets:Assets, var batch : SpriteBatch) : ScreenAdapter() {
     init {
         plane.setPosition(WIDTH * 0.25f, HEIGHT/2, Align.center)
 
-        stage.addActor(
-                TilingImage(this, 2, -SPEED/4) {
-                    Image(assets.background)
-                }
-        )
+        d.addBackground(assets) {
+            state == State.ALIVE
+        }
 
-        stage.addActor(
-                TilingImage(this, 2, -SPEED/2f) {
-                    Image(assets.atlas.findRegion("groundDirt"))
-                }
-        )
-        stage.addActor(plane)
+        d.stage.addActor(plane)
         for(rock in rocks) {
-            stage.addActor(rock)
+            d.stage.addActor(rock)
             rock.player = plane.getX(Align.center)
         }
 
@@ -303,14 +340,12 @@ class GameScreen(assets:Assets, var batch : SpriteBatch) : ScreenAdapter() {
         }
 
         scoreLabel.setPosition(WIDTH/2f, HEIGHT * .9f, Align.center)
-        uistage.addActor(scoreLabel)
+        d.uistage.addActor(scoreLabel)
     }
 
     override fun render(delta: Float) {
-        batch.projectionMatrix = camera.combined;
+        d.act(delta)
 
-        stage.act(delta)
-        uistage.act(delta)
         if( state == State.ALIVE ) {
             for (rock in rocks) {
                 if ( rock.overlaps(plane.hitbox)) {
@@ -318,24 +353,42 @@ class GameScreen(assets:Assets, var batch : SpriteBatch) : ScreenAdapter() {
                 }
             }
         }
-        camera.update();
-        uicamera.update()
 
-        Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-        stage.draw()
-
-        batch.projectionMatrix = uicamera.combined;
-        uistage.draw()
+        ClearScreen()
+        d.render()
+        d.uirender()
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height)
+        d.resize(width, height)
     }
 
     fun addScore() {
         score += 1
         scoreLabel.setText(score.toString())
+    }
+}
+
+class MainMenuScreen(assets:Assets, var batch: SpriteBatch) : ScreenAdapter() {
+
+    var d = BasicScreen(batch)
+
+    init {
+        d.addBackground(assets) {
+            true
+        }
+    }
+
+    override fun render(delta: Float) {
+        d.act(delta)
+
+        ClearScreen()
+        d.render()
+        d.uirender()
+    }
+
+    override fun resize(width: Int, height: Int) {
+        super.resize(width, height)
     }
 }
 
